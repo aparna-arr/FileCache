@@ -41,7 +41,7 @@ Cache::Cache(string cache_root, string file)
 	}
 	catch (const runtime_error &e)
 	{
-		cerr << "CACHE: RUNTIME_ERROR: " << e.what() << endl;
+		cerr << "CACHE: Cache(): RUNTIME_ERROR: " << e.what() << endl;
 	}
 }
 
@@ -62,45 +62,54 @@ unordered_map<string, vector<Peak>> * Cache::get_data(void)
 /* 
  * Check if this file's cache is valid
  * Also creates new cache dir if one does not exist
+ * returns TRUE if safe to read data, FALSE if not
  */
-bool Cache::check_cache()
+bool Cache::check_cache(void)
 {
-	if (new_cache)
-	{
-		create_new_cache(); // creates cache director
-		create_cache(); // creates file cache
-		can_read_data = true;
-	}
-	else
-	{
-		// check MD5sums
-		if (search_dir(MD5_string(filename)))
+	try{	
+		if (new_cache)
 		{
-			// directory for this file exists
-			// check if file is same
-			// get full path to the MD5sum file of directory
-			string path_to_MD5sum = get_MD5sum_path(); 
-			string cache_MD5sum = retrieve_MD5sum(path_to_MD5sum);
-			
-			if (compare_file_MD5(cache_MD5sum, filename))
-			{
-				// cache is updated, all is well. Can read in data now
-				can_read_data = true;
-			}
-			else
-			{
-				// MD5sums don't match: update cache
-				update_cache();
-				can_read_data = true;
-			}
-		}
-		else 
-		{
-			create_cache();
+			create_new_cache(); // creates cache director
+			create_cache(); // creates file cache
 			can_read_data = true;
 		}
+		else
+		{
+			// check MD5sums
+			if (search_dir(MD5_string(filename)))
+			{
+				// directory for this file exists
+				// check if file is same
+				// get full path to the MD5sum file of directory
+				string path_to_MD5sum = get_MD5sum_path(MD5_string(filename)); 
+				string cache_MD5sum = retrieve_MD5sum(path_to_MD5sum);
+				
+				if (compare_file_MD5(cache_MD5sum, filename))
+				{
+					// cache is updated, all is well. Can read in data now
+					can_read_data = true;
+				}
+				else
+				{
+					// MD5sums don't match: update cache
+					update_cache();
+					can_read_data = true;
+				}
+			}
+			else 
+			{
+				create_cache();
+				can_read_data = true;
+			}
+		}
+		
 	}
-	
+	catch (const runtime_error &e)
+	{
+		cerr << "CACHE: check_cache(): RUNTIME ERROR: " << e.what() << endl;
+		return false;
+	}
+
 	return can_read_data;
 }
 
@@ -139,23 +148,49 @@ bool Cache::update_cache(void)
 	return true;
 }
 
-string Cache::get_MD5sum_path(void)
+string Cache::get_MD5sum_path(string MD5str)
 {
+	string fullpath;
 
-	// placeholder
-	return "PLACEHOLDER";
+	if (root.back() != '/')
+		fullpath += "/" + MD5str + "/" + MD5_FILENAME;
+	else
+		fullpath += MD5str + "/" + MD5_FILENAME;
+				
+	return fullpath;
 }
 
 string Cache::retrieve_MD5sum(string path)
 {
+	ifstream md5file(path);
 
-	// placeholder
-	return "PLACEHOLDER";
+	if (!md5file.is_open())
+		throw runtime_error("retrieve_MD5sum(): Could not open md5file [" + path + "]!");	
+
+	string line;
+
+	if (!getline(md5file, line))
+	{
+		md5file.close();
+		throw runtime_error("retrieve_MD5sum(): something is wrong with your md5 line! [" + line + "]");
+	}
+
+	md5file.close();
+
+	return line;
 }
 
 bool Cache::search_dir(string md5)
 {
-	
-	// placeholde
-	return true;
+	DIR * dirp;	
+	struct dirent * ds;
+
+	if ((dirp = opendir(root.c_str())) == NULL)
+		throw runtime_error("search_dir(): DIR [" + root + "] cannot be opened!");
+
+	while((ds = readdir(dirp)) != NULL)
+		if (string(ds->d_name) == md5)
+			return true;	
+
+	return false;
 }

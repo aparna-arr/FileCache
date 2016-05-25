@@ -4,12 +4,15 @@
 #include<stdexcept>
 #include"MD5sum.h"
 #include"Serialize.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<unistd.h>
 #include<fstream>
 #include<unordered_map>
 #include<vector>
+#include"dirent.h"
+
+#define MD5_FILENAME "md5sum.txt"
 
 typedef struct 
 {
@@ -35,7 +38,7 @@ class Cache
 	bool create_cache(void); // user not allowed to directly call this: use check_cache(), creates new file cache for single file
 	bool update_cache(void); // removes previous cache for a single file, rebuilds
 
-	std::string get_MD5sum_path(void);
+	std::string get_MD5sum_path(std::string MD5str);
 	std::string retrieve_MD5sum(std::string path);
 	bool search_dir(std::string md5);
 

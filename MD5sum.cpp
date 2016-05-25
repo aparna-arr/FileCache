@@ -3,9 +3,18 @@ using namespace std;
 
 std::string MD5_string(std::string str)
 {
+	MD5_CTX mdContext;
+	unsigned char c[MD5_DIGEST_LENGTH];
 
-	// placeholder
-	return "PLACEHOLDER";
+	MD5_Init(&mdContext);
+	MD5_Update(&mdContext, str.c_str(), str.length());
+	
+	char c_result[MD5_DIGEST_LENGTH];
+	
+	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
+		sprintf(c_result, "%02x", c[i]);
+		
+	return string(c_result);
 }
 
 bool compare_file_MD5(std::string md5_str, std::string filename)
@@ -21,10 +30,7 @@ bool compare_file_MD5(std::string md5_str, std::string filename)
 	unsigned char data[1024];
 
 	if (fp == NULL) 
-	{
-		cerr << "Can't open file [" << filename << "]" << endl;
-		return false;
-	}	
+		throw runtime_error("compare_file_MD5(): Can't open file [" + filename + "]");
 
 	MD5_Init(&mdContext);
 	int bytes;
