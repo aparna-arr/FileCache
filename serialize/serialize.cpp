@@ -138,10 +138,10 @@ int main()
 	printPeak(peaks2[0]);
 	printPeak(peaks2[1]);
 
-	writeMultipleUnknownSizeRead("test_mult.dat", peaks2, 2);
+	writeMultipleUnknownSizeRead("test_mult_unknown_size.dat", peaks2, 2);
 	cout << "READ" << endl;
 	
-	readMultipleUnknownSize("test_mult.dat", outpeaks2);
+	readMultipleUnknownSize("test_mult_unknown_size.dat", outpeaks2);
 	
 	printPeak(outpeaks2[0]);
 	printPeak(outpeaks2[1]);

@@ -1,0 +1,9 @@
+Compile with:
+arrajpur@crick:~/github/Cache/md5sum_file$ gcc -Wall md5sum.c -lcrypto
+
+
+
+### THIS ONE IS BETTER ###
+# shorter code, fewer includes, good for large files
+gcc -Wall shorter_md5sum.c -lcrypto -lssl
+
