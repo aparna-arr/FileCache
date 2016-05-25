@@ -45,18 +45,36 @@ Cache::Cache(string cache_root, string file)
 	}
 }
 
-unordered_map<string, vector<Peak>> * Cache::get_data(void)
+// returns TRUE if data is successfully gotten, FALSE if not
+bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
 {
-	if (check_cache())
+	try
 	{
-		cerr << "Cache is not valid to read data from!" << endl;
-		return NULL;
-	} 
+		if (!check_cache())
+			throw runtime_error("Cache is not valid to read data from!");
+		// read data
+		
+		string fullpath;
 
-	// read data
+		if (root.back() != '/')
+			fullpath = root + "/" + MD5_string(filename) + "/";
+		else
+			fullpath = root + MD5_string(filename) + "/";
+
+		WigCache * myFileCache = new WigCache(fullpath);
+
+		if (myFileCache->deserialize(data))
+			return true;
+		else 
+			throw runtime_error("Was not able to unserialize data!");
+	}
+	catch (const runtime_error &e)
+	{
+		cerr << "CACHE: get_data(): RUNTIME_ERROR:" << e.what() << endl;
+		return false;
+	}
 	
-	// placeholder
-	return NULL;	
+	return false;	
 }
 
 /* 
@@ -113,6 +131,7 @@ bool Cache::check_cache(void)
 	return can_read_data;
 }
 
+/* returns TRUE if successful removal of file cache, FALSE if not */
 bool Cache::rm_file_cache(void)
 {
 
@@ -120,6 +139,7 @@ bool Cache::rm_file_cache(void)
 	return true;
 }
 
+/* returns TRUE if successful removal of cache, FALSE if not */
 bool Cache::clear_cache(void)
 {
 
@@ -128,19 +148,37 @@ bool Cache::clear_cache(void)
 }
 
 /* PRIVATE FUNCTIONS */
+/* returns TRUE if successful creation of cache, FALSE if not */
 
 void Cache::create_new_cache (void)
 {
+	int status = mkdir(root.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
 
+	if (status != 0)
+		throw runtime_error("create_new_cache(): Directory creation of [" + root + "] was not successful!");	
 }
 
+/* returns TRUE if successful creation of file cache, FALSE if not */
 bool Cache::create_cache(void)
 {
+	string fullpath;
 
-	// placeholder
-	return true;
+	if (root.back() != '/')
+		fullpath = root + "/" + MD5_string(filename) + "/";
+	else
+		fullpath = root + MD5_string(filename) + "/";
+
+	WigCache * myFileCache = new WigCache(fullpath);
+
+	if (myFileCache->serialize(filename))
+		return true;
+	else
+		throw runtime_error("create_cache(): Was not able to serialize data!");
+
+	return false;	
 }
 
+/* returns TRUE if successful update of file cache, FALSE if not */
 bool Cache::update_cache(void)
 {
 
@@ -153,9 +191,9 @@ string Cache::get_MD5sum_path(string MD5str)
 	string fullpath;
 
 	if (root.back() != '/')
-		fullpath += "/" + MD5str + "/" + MD5_FILENAME;
+		fullpath = root + "/" + MD5str + "/" + MD5_FILENAME;
 	else
-		fullpath += MD5str + "/" + MD5_FILENAME;
+		fullpath = root + MD5str + "/" + MD5_FILENAME;
 				
 	return fullpath;
 }

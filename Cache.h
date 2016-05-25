@@ -14,20 +14,13 @@
 
 #define MD5_FILENAME "md5sum.txt"
 
-typedef struct 
-{
-	unsigned int start;
-	unsigned int end;
-	double value;
-} Peak;
-
 class Cache
 {
 	public:
 	Cache(void); // you better know what you're doing if you use this: only included for cases where you want to make an array of new Cache objs ptrs to init later or something
 	Cache(std::string cache_root, std::string file);
 
-	std::unordered_map<std::string, std::vector<Peak>> * get_data(void); // runs check_cache()	
+	bool get_data(std::unordered_map<std::string, std::vector<Peak>> *& data); // runs check_cache()	
 	
 	bool check_cache(void); // checks if previous cache is valid for a single file, if not creates or rebuilds
 	bool rm_file_cache(void); // deletes a single file from cache 
