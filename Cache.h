@@ -1,5 +1,6 @@
 #ifndef CACHE_H
 #define CACHE_H
+
 #include<iostream>
 #include<stdexcept>
 #include"MD5sum.h"
@@ -13,6 +14,7 @@
 #include"dirent.h"
 
 #define MD5_FILENAME "md5sum.txt"
+#define CHR_SUBDIR "chrs/"
 
 class Cache
 {

@@ -5,6 +5,9 @@
 #include<stdexcept>
 #include<unordered_map>
 #include<vector>
+#include<fstream>
+#include<sstream>
+#include"dirent.h"
 
 #define CHROMSIZE 50 // max size of chromosome name in characters
 
@@ -24,7 +27,8 @@ class WigCache
 
 	private:
 	bool readInWig(std::string filename, std::unordered_map<std::string, std::vector<Peak>> *& peaks);
-	bool vectorToArray(std::vector<Peak> *& peaks_vec, Peak *& peaks_ar); 
+	bool vectorToArray(std::vector<Peak> & peaks_vec, Peak *& peaks_ar); 
+	bool arrayToVector(Peak * peaks_ar, int numPeaks, std::vector<Peak> & peaks_vec); 
 	bool flatten(Peak * peaks_ar, int numPeaks, std::string file);
 	bool unflatten(Peak *& peaks_ar, int & numPeaks, std::string file);
 	

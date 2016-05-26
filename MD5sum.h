@@ -5,6 +5,7 @@
 #include<stdexcept>
 
 std::string MD5_string(std::string str);
+std::string MD5_file(std::string filename);
 bool compare_file_MD5(std::string md5_str, std::string filename);
 
 #endif

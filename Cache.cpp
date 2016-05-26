@@ -57,9 +57,9 @@ bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
 		string fullpath;
 
 		if (root.back() != '/')
-			fullpath = root + "/" + MD5_string(filename) + "/";
+			fullpath = root + "/" + MD5_string(filename) + "/" + CHR_SUBDIR;
 		else
-			fullpath = root + MD5_string(filename) + "/";
+			fullpath = root + MD5_string(filename) + "/" + CHR_SUBDIR;
 
 		WigCache * myFileCache = new WigCache(fullpath);
 
@@ -161,12 +161,27 @@ void Cache::create_new_cache (void)
 /* returns TRUE if successful creation of file cache, FALSE if not */
 bool Cache::create_cache(void)
 {
-	string fullpath;
+	string md5path,fullpath;
 
 	if (root.back() != '/')
-		fullpath = root + "/" + MD5_string(filename) + "/";
+	{
+		md5path = root + "/" + MD5_string(filename) + "/" + MD5_FILENAME;
+		fullpath = root + "/" + MD5_string(filename) + "/" + CHR_SUBDIR;
+	}
 	else
-		fullpath = root + MD5_string(filename) + "/";
+	{
+		md5path = root + MD5_string(filename) + "/" + MD5_FILENAME;
+		fullpath = root + MD5_string(filename) + "/" + CHR_SUBDIR;
+	}
+
+	ofstream md5file(md5path);
+	
+	if (!md5file.is_open())
+		throw runtime_error("create_cache(): cannot open new md5 file path [" + md5path + "]");
+
+	md5file << MD5_file(md5path);
+
+	md5file.close();
 
 	WigCache * myFileCache = new WigCache(fullpath);
 

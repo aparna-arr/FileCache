@@ -17,7 +17,7 @@ std::string MD5_string(std::string str)
 	return string(c_result);
 }
 
-bool compare_file_MD5(std::string md5_str, std::string filename)
+string MD5_file(string filename)
 {
 	// find md5 of file
 	// efficient alg for large files
@@ -34,6 +34,7 @@ bool compare_file_MD5(std::string md5_str, std::string filename)
 
 	MD5_Init(&mdContext);
 	int bytes;
+
 	while ((bytes = fread(data,1,1024,fp)) != 0)
 		MD5_Update(&mdContext, data, bytes);
 	
@@ -46,7 +47,12 @@ bool compare_file_MD5(std::string md5_str, std::string filename)
 
 	fclose(fp);		
 
-	if (string(c_result) == md5_str)
+	return string(c_result);
+}
+
+bool compare_file_MD5(std::string md5_str, std::string filename)
+{
+	if (MD5_file(filename) == md5_str)
 		return true;
 
 	return false;
