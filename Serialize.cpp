@@ -10,9 +10,11 @@ bool WigCache::serialize(std::string file)
 {
 	try
 	{
-		unordered_map<string, vector<Peak>> * peaks_map;
+		unordered_map<string, vector<Peak>> * peaks_map = new unordered_map<string, vector<Peak>>;
 
+		cerr << "serialize() before readInWig" << endl;
 		readInWig(file, peaks_map);
+		cerr << "serialize() after readInWig" << endl;
 		
 		for (auto iter = peaks_map->begin(); iter != peaks_map->end(); iter++)
 		{
@@ -49,6 +51,8 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 		size_t found;
 		vector<string> chrfiles;
 
+		data = new unordered_map<string, vector<Peak>>;
+
 		while((ds = readdir(dirp)) != NULL)
 			if ((found = string(ds->d_name).find(".dat")) != string::npos)
 				chrfiles.push_back(ds->d_name);
@@ -61,7 +65,9 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 			string curr_chr = (*iter).substr(0,(*iter).find(".dat"));
 			Peak * peakAr;
 			int numPeaks;
-			unflatten(peakAr, numPeaks, *iter);
+			cerr << "deserialize(): before unflatten for chr [" << curr_chr << "]" << endl; 
+			unflatten(peakAr, numPeaks, path + "/" + *iter);
+			cerr << "deserialize(): after unflatten for chr [" << curr_chr << "]" << endl; 
 			
 			arrayToVector(peakAr, numPeaks, (*data)[curr_chr]);
 		}
@@ -128,10 +134,6 @@ bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, s
 	
 			(*peaks)[curr_chr].push_back(tmp);
 		}
-//		else 
-//		{
-//			cerr << "skipping line [" << line << "]" << endl;
-//		} 
 	}
 
 	if ((*peaks).empty())	
@@ -192,6 +194,8 @@ bool WigCache::unflatten(Peak *& peaks_ar, int & numPeaks, std::string file)
 		throw runtime_error("unflatten(): cannot open infile [" + file + "]");
 
 	in.read(reinterpret_cast<char*>(&numPeaks), sizeof(int));
+
+	peaks_ar = new Peak[numPeaks];
 
 	for (int i = 0; i < numPeaks; i++)
 		in.read(reinterpret_cast<char*>(&(peaks_ar[i])), sizeof(Peak));

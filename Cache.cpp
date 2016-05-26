@@ -259,27 +259,41 @@ bool Cache::clear_cache(void)
 
 void Cache::create_new_cache (void)
 {
+	cerr << "create_new_cache() start" << endl;
 	int status = mkdir(root.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
 
 	if (status != 0)
 		throw runtime_error("create_new_cache(): Directory creation of [" + root + "] was not successful!");	
+	cerr << "create_new_cache() end" << endl;
+	
+	new_cache = false;
 }
 
 /* returns TRUE if successful creation of file cache, FALSE if not */
 bool Cache::create_cache(void)
 {
-	string md5path,fullpath;
+	cerr << "create_cache() start" << endl;
+	string md5path,fullpath, filepath;
 
 	if (root.back() != '/')
 	{
+		filepath = root + "/" + MD5_string(filename) + "/";
 		md5path = root + "/" + MD5_string(filename) + "/" + MD5_FILENAME;
 		fullpath = root + "/" + MD5_string(filename) + "/" + CHR_SUBDIR;
 	}
 	else
 	{
+		filepath = root + MD5_string(filename) + "/";
 		md5path = root + MD5_string(filename) + "/" + MD5_FILENAME;
 		fullpath = root + MD5_string(filename) + "/" + CHR_SUBDIR;
 	}
+
+	cerr << "create_cache() before mkdir" << endl;
+	int status = mkdir(filepath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
+	cerr << "create_cache() after mkdir" << endl;
+
+	if (status != 0)
+		throw runtime_error("create_cache(): Directory creation of [" + filepath + "] was not successful!");	
 
 	ofstream md5file(md5path);
 	
@@ -290,10 +304,19 @@ bool Cache::create_cache(void)
 
 	md5file.close();
 
+	int chr_status = mkdir(fullpath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
+	if (chr_status != 0)
+		throw runtime_error("create_cache(): Directory creation of [" + fullpath + "] was not successful!");	
+
+	cerr << "create_cache() before new WigCache()" << endl;
 	WigCache * myFileCache = new WigCache(fullpath);
+	cerr << "create_cache() after new WigCache()" << endl;
 
 	if (myFileCache->serialize(filename))
+	{
+		can_read_data = true;
 		return true;
+	}
 	else
 		throw runtime_error("create_cache(): Was not able to serialize data!");
 

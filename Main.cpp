@@ -20,6 +20,34 @@ int main (int argc, char * argv[])
 		return 1;
 	}
 
+	cerr << "Testing MD5sum functions" << endl;
+	string md5test_str = "happy" ;
+	cerr << "string is [" + md5test_str + "]" << endl;
+	cerr << "md5 of string is [" << MD5_string(md5test_str) << "]" << endl;
+
 	Cache * myCache = new Cache(cache_root, filename);
-	myCache->check_cache();
+	bool checkTest = myCache->check_cache();
+	
+	cout << "CheckTest for check_cache(): " << checkTest << endl;
+
+	if (!checkTest)
+		return 1;	
+
+	unordered_map<string, vector<Peak>> * dataTest;
+
+	bool checkData = myCache->get_data(dataTest);
+
+	cout << "CheckData for get_data(): " << checkData << endl;
+	
+	if (!checkData)
+		return 1;
+	
+	for (auto chrIter = dataTest->begin(); chrIter != dataTest->end(); chrIter++)
+	{
+		cout << "CurrChr is " << chrIter->first << endl;
+		for (vector<Peak>::iterator peakIter = (chrIter->second).begin(); peakIter != (chrIter->second).end(); peakIter++)
+		{
+			cout << "\tstart: " << peakIter->start << ", end: " << peakIter->end << ", value: " << peakIter->value << endl;
+		}
+	}	
 }	

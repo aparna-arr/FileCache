@@ -7,12 +7,13 @@ std::string MD5_string(std::string str)
 	unsigned char c[MD5_DIGEST_LENGTH];
 
 	MD5_Init(&mdContext);
-	MD5_Update(&mdContext, str.c_str(), str.length());
+	MD5_Update(&mdContext, (unsigned char *)str.c_str(), str.length());
+	MD5_Final(c, &mdContext);
 	
-	char c_result[MD5_DIGEST_LENGTH];
+	char c_result[MD5_DIGEST_LENGTH*2+1];
 	
 	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
-		sprintf(c_result, "%02x", c[i]);
+		sprintf(&c_result[i*2], "%02x", c[i]);
 		
 	return string(c_result);
 }
@@ -40,10 +41,10 @@ string MD5_file(string filename)
 	
 	MD5_Final(c, &mdContext);
 	
-	char c_result[MD5_DIGEST_LENGTH];
+	char c_result[MD5_DIGEST_LENGTH*2+1];
 
 	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
-		sprintf(c_result, "%02x", c[i]);
+		sprintf(&c_result[i*2], "%02x", c[i]);
 
 	fclose(fp);		
 
