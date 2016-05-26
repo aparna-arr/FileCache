@@ -9,3 +9,4 @@ variableStep chrom=chr2 span=99
 400	2
 variableStep chrom=chr2 span=499
 500	40
+600	5

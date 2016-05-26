@@ -53,6 +53,8 @@ string MD5_file(string filename)
 
 bool compare_file_MD5(std::string md5_str, std::string filename)
 {
+	cerr << "MD5 of file is [" << MD5_file(filename) << "]" << endl;
+	cerr << "MD5 of str is  [" << md5_str << "]" << endl;
 	if (MD5_file(filename) == md5_str)
 		return true;
 

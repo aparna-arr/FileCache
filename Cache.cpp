@@ -101,7 +101,6 @@ bool Cache::check_cache(void)
 				// get full path to the MD5sum file of directory
 				string path_to_MD5sum = get_MD5sum_path(MD5_string(filename)); 
 				string cache_MD5sum = retrieve_MD5sum(path_to_MD5sum);
-				
 				if (compare_file_MD5(cache_MD5sum, filename))
 				{
 					// cache is updated, all is well. Can read in data now
@@ -134,6 +133,7 @@ bool Cache::check_cache(void)
 /* returns TRUE if successful removal of file cache, FALSE if not */
 bool Cache::rm_file_cache(string md5file)
 {
+	cerr << "start rm_file_cache()" << endl;
 
 	try
 	{
@@ -161,9 +161,9 @@ bool Cache::rm_file_cache(string md5file)
 	
 		if (filetest)
 		{
-			filetest.close();
 	
-			if (!remove(md5path.c_str()))
+			filetest.close();
+			if (remove(md5path.c_str()) != 0)
 				throw runtime_error("rm_file_cache: could not delete file [" + md5path + "]");				 
 		}
 		else
@@ -178,33 +178,42 @@ bool Cache::rm_file_cache(string md5file)
 		size_t found;
 
 		while((ds = readdir(dirp)) != NULL)
+		{
+			string curr_file = fullpath + string(ds->d_name);
 			if ((found = string(ds->d_name).find(".dat")) != string::npos)
 			{
-				ifstream test(ds->d_name);
+				cerr << "rm_file_cache(): on file [" << string(ds->d_name) << "] WHICH HAS A .dat!" << endl;
+				ifstream test(curr_file, ios::binary);
 
 				if (!test)
 				{
 					closedir(dirp);
-					throw runtime_error("rm_file_cache: could not open file [" + string(ds->d_name) + "]");
+					throw runtime_error("rm_file_cache: could not open .dat file [" + curr_file + "]");
 				}
 
-				if(!remove(ds->d_name))
-					throw runtime_error("rm_file_cache: could not delete file [" + string(ds->d_name) + "]");		 
+				test.close();
+				if(remove(curr_file.c_str()) != 0)
+				{
+					closedir(dirp);
+					throw runtime_error("rm_file_cache: could not delete .dat file [" + curr_file + "]");		
+				} 
 			}
-			else
+			else if (string(ds->d_name) != "." && string(ds->d_name) != ".." && string(ds->d_name) != "")
 			{
 				closedir(dirp);
-				throw runtime_error("Found a non- .dat file in directory [" + fullpath + "] : [" + string(ds->d_name) + "]! Remove this file before proceeding");
+				throw runtime_error("Found a non- .dat file in directory [" + fullpath + "] : [" + curr_file + "]! Remove this file before proceeding");
 			}
+		}
 			
 		closedir(dirp);
 
-		if (!rmdir(fullpath.c_str()))
+		if (rmdir(fullpath.c_str()) != 0)
 			throw runtime_error("Could not remove directory [" + fullpath + "]");
 
-		if (!rmdir(filepath.c_str()))
+		if (rmdir(filepath.c_str()) != 0)
 			throw runtime_error("Could not remove directory [" + filepath + "]");
 
+		cerr << "end rm_file_cache()" << endl;
 		// placeholder
 		return true;
 	
@@ -231,15 +240,23 @@ bool Cache::clear_cache(void)
 
 		while((ds = readdir(dirp)) != NULL)
 			if (string(ds->d_name) != "." && string(ds->d_name) != "..")
-				if(!rm_file_cache(ds->d_name))
+			{
+				string curr_dir;
+				if (root.back() != '/')
+					curr_dir = root + "/" + string(ds->d_name);
+				else
+					curr_dir = root + string(ds->d_name);
+
+				if(rm_file_cache(curr_dir) != 0)
 				{			
 					closedir(dirp);
-					throw runtime_error("clear_cache(): could not remove dir [" + string(ds->d_name) + "]");
-				}			
+					throw runtime_error("clear_cache(): could not remove dir [" + curr_dir + "]");
+				}	
+			}		
 
 		closedir(dirp);
 
-		if (!rmdir(root.c_str()))
+		if (rmdir(root.c_str()) != 0)
 			throw runtime_error("clear_cache(): could not remove dir [" + root + "]");
 
 		return true;
@@ -300,7 +317,9 @@ bool Cache::create_cache(void)
 	if (!md5file.is_open())
 		throw runtime_error("create_cache(): cannot open new md5 file path [" + md5path + "]");
 
-	md5file << MD5_file(md5path);
+	cerr << "create_cache(): MD5_file is [" << MD5_file(filename) << "] for [" << filename << "]" << endl;
+
+	md5file << MD5_file(filename);
 
 	md5file.close();
 
@@ -326,8 +345,12 @@ bool Cache::create_cache(void)
 /* returns TRUE if successful update of file cache, FALSE if not */
 bool Cache::update_cache(void)
 {
+	if (!rm_file_cache())
+		throw runtime_error("update_cache(): could not remove depreciated file cache");
 
-	// placeholder
+	if (!create_cache())
+		throw runtime_error("update_cache(): could not create updated file cache");
+	
 	return true;
 }
 
