@@ -12,6 +12,7 @@
 #include<unordered_map>
 #include<vector>
 #include"dirent.h"
+#include<cstdio>
 
 #define MD5_FILENAME "md5sum.txt"
 #define CHR_SUBDIR "chrs/"
@@ -25,7 +26,7 @@ class Cache
 	bool get_data(std::unordered_map<std::string, std::vector<Peak>> *& data); // runs check_cache()	
 	
 	bool check_cache(void); // checks if previous cache is valid for a single file, if not creates or rebuilds
-	bool rm_file_cache(void); // deletes a single file from cache 
+	bool rm_file_cache(std::string md5file = ""); // deletes a single file from cache 
 	bool clear_cache(void); // removes entire cache
 
 	private:

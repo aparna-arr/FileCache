@@ -132,19 +132,126 @@ bool Cache::check_cache(void)
 }
 
 /* returns TRUE if successful removal of file cache, FALSE if not */
-bool Cache::rm_file_cache(void)
+bool Cache::rm_file_cache(string md5file)
 {
 
-	// placeholder
-	return true;
+	try
+	{
+		string md5path,fullpath, filepath, md5sum_filename;
+
+		if (md5file != "")
+			md5sum_filename = md5file;
+		else
+			md5sum_filename = MD5_string(filename);		
+	
+		if (root.back() != '/')
+		{
+			filepath = root + "/" + md5sum_filename + "/";
+			md5path = root + "/" + md5sum_filename + "/" + MD5_FILENAME;
+			fullpath = root + "/" + md5sum_filename + "/" + CHR_SUBDIR;
+		}
+		else
+		{
+			filepath = root + md5sum_filename + "/";
+			md5path = root + md5sum_filename + "/" + MD5_FILENAME;
+			fullpath = root + md5sum_filename + "/" + CHR_SUBDIR;
+		}
+		
+		ifstream filetest(md5path.c_str());
+	
+		if (filetest)
+		{
+			filetest.close();
+	
+			if (!remove(md5path.c_str()))
+				throw runtime_error("rm_file_cache: could not delete file [" + md5path + "]");				 
+		}
+		else
+			throw runtime_error("rm_file_cache: could not open file [" + md5path + "]: file may not exist!");
+
+		DIR * dirp;
+		struct dirent * ds;
+	
+		if ((dirp = opendir(fullpath.c_str())) == NULL)
+			throw runtime_error("rm_file_cache(): could not open DIR [" + fullpath + "]!");
+
+		size_t found;
+
+		while((ds = readdir(dirp)) != NULL)
+			if ((found = string(ds->d_name).find(".dat")) != string::npos)
+			{
+				ifstream test(ds->d_name);
+
+				if (!test)
+				{
+					closedir(dirp);
+					throw runtime_error("rm_file_cache: could not open file [" + string(ds->d_name) + "]");
+				}
+
+				if(!remove(ds->d_name))
+					throw runtime_error("rm_file_cache: could not delete file [" + string(ds->d_name) + "]");		 
+			}
+			else
+			{
+				closedir(dirp);
+				throw runtime_error("Found a non- .dat file in directory [" + fullpath + "] : [" + string(ds->d_name) + "]! Remove this file before proceeding");
+			}
+			
+		closedir(dirp);
+
+		if (!rmdir(fullpath.c_str()))
+			throw runtime_error("Could not remove directory [" + fullpath + "]");
+
+		if (!rmdir(filepath.c_str()))
+			throw runtime_error("Could not remove directory [" + filepath + "]");
+
+		// placeholder
+		return true;
+	
+	}
+	catch (const runtime_error &e)
+	{
+		cerr << "CACHE: rm_file_cache(): RUNTIME_ERROR: " << e.what() << endl;
+		return false;
+	}
+
+	return false;
 }
 
 /* returns TRUE if successful removal of cache, FALSE if not */
 bool Cache::clear_cache(void)
 {
+	try
+	{
+		DIR * dirp;
+		struct dirent * ds;
+	
+		if ((dirp = opendir(root.c_str())) == NULL)
+			throw runtime_error("clear_cache(): could not open DIR [" + root + "]!");
 
-	// placeholder
-	return true;
+		while((ds = readdir(dirp)) != NULL)
+			if (string(ds->d_name) != "." && string(ds->d_name) != "..")
+				if(!rm_file_cache(ds->d_name))
+				{			
+					closedir(dirp);
+					throw runtime_error("clear_cache(): could not remove dir [" + string(ds->d_name) + "]");
+				}			
+
+		closedir(dirp);
+
+		if (!rmdir(root.c_str()))
+			throw runtime_error("clear_cache(): could not remove dir [" + root + "]");
+
+		return true;
+
+	}
+	catch (const runtime_error &e)
+	{
+		cerr << "CACHE: clear_cache(): RUNTIME_ERROR: " << e.what() << endl;
+		return false;
+	}
+	
+	return false;
 }
 
 /* PRIVATE FUNCTIONS */
