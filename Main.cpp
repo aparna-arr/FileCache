@@ -50,4 +50,11 @@ int main (int argc, char * argv[])
 			cout << "\tstart: " << peakIter->start << ", end: " << peakIter->end << ", value: " << peakIter->value << endl;
 		}
 	}	
+
+	bool deleteTest = myCache->clear_cache();
+	
+	if (!deleteTest)
+		return 1;
+	
+	cout << "DeleteTest for clear_cache(): " << deleteTest << endl;
 }	

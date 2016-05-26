@@ -241,13 +241,19 @@ bool Cache::clear_cache(void)
 		while((ds = readdir(dirp)) != NULL)
 			if (string(ds->d_name) != "." && string(ds->d_name) != "..")
 			{
+/*
 				string curr_dir;
+
 				if (root.back() != '/')
 					curr_dir = root + "/" + string(ds->d_name);
 				else
 					curr_dir = root + string(ds->d_name);
+*/
+				string curr_dir = string(ds->d_name);
 
-				if(rm_file_cache(curr_dir) != 0)
+				cerr << "clear_cache(): curr_dir is " << curr_dir << endl;
+
+				if(!rm_file_cache(curr_dir))
 				{			
 					closedir(dirp);
 					throw runtime_error("clear_cache(): could not remove dir [" + curr_dir + "]");
