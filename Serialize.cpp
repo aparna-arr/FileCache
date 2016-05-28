@@ -3,18 +3,21 @@ using namespace std;
 
 WigCache::WigCache(std::string fullpath)
 {
+	debug("WigCache::WigCache(): begin", 1);
 	path = fullpath;
+	debug("WigCache::WigCache(): end", 1);
 }
 
 bool WigCache::serialize(std::string file)
 {
 	try
 	{
+		debug("WigCache::serialize(): begin", 1);
 		unordered_map<string, vector<Peak>> * peaks_map = new unordered_map<string, vector<Peak>>;
 
-		cerr << "serialize() before readInWig" << endl;
+//		cerr << "serialize() before readInWig" << endl;
 		readInWig(file, peaks_map);
-		cerr << "serialize() after readInWig" << endl;
+//		cerr << "serialize() after readInWig" << endl;
 		
 		for (auto iter = peaks_map->begin(); iter != peaks_map->end(); iter++)
 		{
@@ -27,6 +30,7 @@ bool WigCache::serialize(std::string file)
 			flatten(peaks_array, numPeaks, path + iter->first + ".dat");
 		}
 
+		debug("WigCache::serialize(): end", 1);
 		return true;
 	}
 	catch (const runtime_error &e)
@@ -42,6 +46,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 {
 	try
 	{
+		debug("WigCache::deserialize(): begin", 1);
 		DIR * dirp;
 		struct dirent * ds;
 	
@@ -65,13 +70,14 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 			string curr_chr = (*iter).substr(0,(*iter).find(".dat"));
 			Peak * peakAr;
 			int numPeaks;
-			cerr << "deserialize(): before unflatten for chr [" << curr_chr << "]" << endl; 
+//			cerr << "deserialize(): before unflatten for chr [" << curr_chr << "]" << endl; 
 			unflatten(peakAr, numPeaks, path + "/" + *iter);
-			cerr << "deserialize(): after unflatten for chr [" << curr_chr << "]" << endl; 
+//			cerr << "deserialize(): after unflatten for chr [" << curr_chr << "]" << endl; 
 			
 			arrayToVector(peakAr, numPeaks, (*data)[curr_chr]);
 		}
 
+		debug("WigCache::deserialize(): end", 1);
 		return true;
 	}
 	catch (const runtime_error &e)
@@ -85,6 +91,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 
 bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, std::vector<Peak>> *& peaks)
 {
+	debug("WigCache::readInWig(): begin", 1);
 	ifstream fp(filename);
 
 	if (!fp.is_open())
@@ -137,16 +144,15 @@ bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, s
 	}
 
 	if ((*peaks).empty())	
-	{
 		throw runtime_error("readInWig(): Peaks are empty!");
-		return false;
-	}
 
+	debug("WigCache::readInWig(): end", 1);
 	return true;
 }
 
 bool WigCache::vectorToArray(std::vector<Peak> & peaks_vec, Peak *& peaks_ar) 
 {
+	debug("WigCache::vectorToArray(): begin", 1);
 	vector<Peak>::iterator it = peaks_vec.begin();
 	int i = 0;
 
@@ -157,20 +163,24 @@ bool WigCache::vectorToArray(std::vector<Peak> & peaks_vec, Peak *& peaks_ar)
 		i++;
 	}
 
+	debug("WigCache::vectorToArray(): end", 1);
 	return true;
 }
 
 bool WigCache::arrayToVector(Peak * peaks_ar, int numPeaks, vector<Peak> & peaks_vec)
 {
+	debug("WigCache::arrayToVector(): begin", 1);
 	for (int i = 0; i < numPeaks; i++)
 		peaks_vec.push_back(peaks_ar[i]);
 	
 	// delete peaks_ar ???
+	debug("WigCache::arrayToVector(): end", 1);
 	return true;
 }
 
 bool WigCache::flatten(Peak * peaks_ar, int numPeaks, std::string file)
 {
+	debug("WigCache::flatten(): begin", 1);
 	ofstream out(file.c_str(), ios::binary);
 
 	if (!out.is_open())
@@ -183,11 +193,14 @@ bool WigCache::flatten(Peak * peaks_ar, int numPeaks, std::string file)
 
 	out.close();
 
+	debug("WigCache::flatten(): end", 1);
+
 	return true;
 }
 
 bool WigCache::unflatten(Peak *& peaks_ar, int & numPeaks, std::string file)
 {
+	debug("WigCache::unflatten(): begin", 1);
 	ifstream in(file.c_str(), ios::binary);
 	
 	if (!in.is_open())
@@ -202,5 +215,6 @@ bool WigCache::unflatten(Peak *& peaks_ar, int & numPeaks, std::string file)
 	
 	in.close();
 
+	debug("WigCache::unflatten(): end", 1);
 	return true;
 }

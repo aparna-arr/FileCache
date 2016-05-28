@@ -13,6 +13,7 @@
 #include<vector>
 #include"dirent.h"
 #include<cstdio>
+#include"Debug.h"
 
 #define MD5_FILENAME "md5sum.txt"
 #define CHR_SUBDIR "chrs/"

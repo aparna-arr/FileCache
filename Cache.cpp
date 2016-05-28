@@ -4,16 +4,22 @@ using namespace std;
 // later functions DO NOT CHECK the validity of the root or filename afterconstructor: USE THIS ONLY IF YOU KNOW WHAT YOU ARE DOING
 Cache::Cache(void)
 {
+	debug("Cache::Cache(): begin", 1);
+
 	root = "INIT";
 	filename = "INIT";
 	new_cache = false;
 	can_read_data = false;
+
+	debug("Cache::Cache(): end", 1);
 }
 
 Cache::Cache(string cache_root, string file)
 {
 	try
 	{
+		debug("Cache::Cache(string, string): begin", 1);
+
 		struct stat s;
 		new_cache = false;
 		can_read_data = false;
@@ -25,7 +31,7 @@ Cache::Cache(string cache_root, string file)
 				throw runtime_error("Path [" + cache_root + "] exists but is not a directory! Likely you have given the path of a FILE.");
 		else // set flag to create a new cache dir whenever another function is called, throw errors for clear_cache() and rm_file_cache()
 		{
-			cerr << "Cache does not exist: will create new cache\n";
+//			cerr << "Cache does not exist: will create new cache\n";
 			new_cache = true;
 			root = cache_root;
 		}
@@ -38,6 +44,8 @@ Cache::Cache(string cache_root, string file)
 			throw runtime_error("Cannot read file [" + file + "]: File does not exist or is unreadable!");
 		
 		test.close();
+
+		debug("Cache::Cache(string, string): end", 1);
 	}
 	catch (const runtime_error &e)
 	{
@@ -50,6 +58,8 @@ bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
 {
 	try
 	{
+		debug("Cache::get_data(): begin", 1);
+
 		if (!check_cache())
 			throw runtime_error("Cache is not valid to read data from!");
 		// read data
@@ -64,7 +74,11 @@ bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
 		WigCache * myFileCache = new WigCache(fullpath);
 
 		if (myFileCache->deserialize(data))
+		{
+			debug("Cache::get_data(): end", 1);
+
 			return true;
+		}
 		else 
 			throw runtime_error("Was not able to unserialize data!");
 	}
@@ -85,6 +99,7 @@ bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
 bool Cache::check_cache(void)
 {
 	try{	
+		debug("Cache::check_cache(): begin", 1);
 		if (new_cache)
 		{
 			create_new_cache(); // creates cache director
@@ -119,7 +134,8 @@ bool Cache::check_cache(void)
 				can_read_data = true;
 			}
 		}
-		
+		debug("Cache::check_cache(): end", 1);
+		return can_read_data;
 	}
 	catch (const runtime_error &e)
 	{
@@ -127,16 +143,15 @@ bool Cache::check_cache(void)
 		return false;
 	}
 
-	return can_read_data;
 }
 
 /* returns TRUE if successful removal of file cache, FALSE if not */
 bool Cache::rm_file_cache(string md5file)
 {
-	cerr << "start rm_file_cache()" << endl;
-
 	try
 	{
+		debug("Cache::rm_file_cache(): begin", 1);
+
 		string md5path,fullpath, filepath, md5sum_filename;
 
 		if (md5file != "")
@@ -182,7 +197,7 @@ bool Cache::rm_file_cache(string md5file)
 			string curr_file = fullpath + string(ds->d_name);
 			if ((found = string(ds->d_name).find(".dat")) != string::npos)
 			{
-				cerr << "rm_file_cache(): on file [" << string(ds->d_name) << "] WHICH HAS A .dat!" << endl;
+//				cerr << "rm_file_cache(): on file [" << string(ds->d_name) << "] WHICH HAS A .dat!" << endl;
 				ifstream test(curr_file, ios::binary);
 
 				if (!test)
@@ -213,8 +228,7 @@ bool Cache::rm_file_cache(string md5file)
 		if (rmdir(filepath.c_str()) != 0)
 			throw runtime_error("Could not remove directory [" + filepath + "]");
 
-		cerr << "end rm_file_cache()" << endl;
-		// placeholder
+		debug("Cache::rm_file_cache(): end", 1);
 		return true;
 	
 	}
@@ -232,6 +246,7 @@ bool Cache::clear_cache(void)
 {
 	try
 	{
+		debug("Cache::clear_cache(): begin", 1);
 		DIR * dirp;
 		struct dirent * ds;
 	
@@ -251,7 +266,7 @@ bool Cache::clear_cache(void)
 */
 				string curr_dir = string(ds->d_name);
 
-				cerr << "clear_cache(): curr_dir is " << curr_dir << endl;
+//				cerr << "clear_cache(): curr_dir is " << curr_dir << endl;
 
 				if(!rm_file_cache(curr_dir))
 				{			
@@ -265,6 +280,7 @@ bool Cache::clear_cache(void)
 		if (rmdir(root.c_str()) != 0)
 			throw runtime_error("clear_cache(): could not remove dir [" + root + "]");
 
+		debug("Cache::clear_cache(): end", 1);
 		return true;
 
 	}
@@ -282,20 +298,21 @@ bool Cache::clear_cache(void)
 
 void Cache::create_new_cache (void)
 {
-	cerr << "create_new_cache() start" << endl;
+	debug("Cache::create_new_cache(): begin", 1);
 	int status = mkdir(root.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
 
 	if (status != 0)
 		throw runtime_error("create_new_cache(): Directory creation of [" + root + "] was not successful!");	
-	cerr << "create_new_cache() end" << endl;
+//	cerr << "create_new_cache() end" << endl;
 	
 	new_cache = false;
+	debug("Cache::create_new_cache(): end", 1);
 }
 
 /* returns TRUE if successful creation of file cache, FALSE if not */
 bool Cache::create_cache(void)
 {
-	cerr << "create_cache() start" << endl;
+	debug("Cache::create_cache(): begin", 1);
 	string md5path,fullpath, filepath;
 
 	if (root.back() != '/')
@@ -311,9 +328,9 @@ bool Cache::create_cache(void)
 		fullpath = root + MD5_string(filename) + "/" + CHR_SUBDIR;
 	}
 
-	cerr << "create_cache() before mkdir" << endl;
+//	cerr << "create_cache() before mkdir" << endl;
 	int status = mkdir(filepath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
-	cerr << "create_cache() after mkdir" << endl;
+//	cerr << "create_cache() after mkdir" << endl;
 
 	if (status != 0)
 		throw runtime_error("create_cache(): Directory creation of [" + filepath + "] was not successful!");	
@@ -323,7 +340,7 @@ bool Cache::create_cache(void)
 	if (!md5file.is_open())
 		throw runtime_error("create_cache(): cannot open new md5 file path [" + md5path + "]");
 
-	cerr << "create_cache(): MD5_file is [" << MD5_file(filename) << "] for [" << filename << "]" << endl;
+//	cerr << "create_cache(): MD5_file is [" << MD5_file(filename) << "] for [" << filename << "]" << endl;
 
 	md5file << MD5_file(filename);
 
@@ -333,13 +350,14 @@ bool Cache::create_cache(void)
 	if (chr_status != 0)
 		throw runtime_error("create_cache(): Directory creation of [" + fullpath + "] was not successful!");	
 
-	cerr << "create_cache() before new WigCache()" << endl;
+//	cerr << "create_cache() before new WigCache()" << endl;
 	WigCache * myFileCache = new WigCache(fullpath);
-	cerr << "create_cache() after new WigCache()" << endl;
+//	cerr << "create_cache() after new WigCache()" << endl;
 
 	if (myFileCache->serialize(filename))
 	{
 		can_read_data = true;
+		debug("Cache::create_cache(): end", 1);
 		return true;
 	}
 	else
@@ -351,29 +369,35 @@ bool Cache::create_cache(void)
 /* returns TRUE if successful update of file cache, FALSE if not */
 bool Cache::update_cache(void)
 {
+	debug("Cache::update_cache(): begin", 1);
 	if (!rm_file_cache())
 		throw runtime_error("update_cache(): could not remove depreciated file cache");
 
 	if (!create_cache())
 		throw runtime_error("update_cache(): could not create updated file cache");
 	
+	debug("Cache::update_cache(): end", 1);
 	return true;
 }
 
 string Cache::get_MD5sum_path(string MD5str)
 {
+	debug("Cache::get_MD5sum_path(): begin", 1);
 	string fullpath;
 
 	if (root.back() != '/')
 		fullpath = root + "/" + MD5str + "/" + MD5_FILENAME;
 	else
 		fullpath = root + MD5str + "/" + MD5_FILENAME;
+
+	debug("Cache::get_MD5sum_path(): end", 1);
 				
 	return fullpath;
 }
 
 string Cache::retrieve_MD5sum(string path)
 {
+	debug("Cache::retrieve_MD5sum(): begin", 1);
 	ifstream md5file(path);
 
 	if (!md5file.is_open())
@@ -389,11 +413,14 @@ string Cache::retrieve_MD5sum(string path)
 
 	md5file.close();
 
+	debug("Cache::retrieve_MD5sum(): end", 1);
+
 	return line;
 }
 
 bool Cache::search_dir(string md5)
 {
+	debug("Cache::search_dir(): begin", 1);
 	DIR * dirp;	
 	struct dirent * ds;
 
@@ -402,7 +429,11 @@ bool Cache::search_dir(string md5)
 
 	while((ds = readdir(dirp)) != NULL)
 		if (string(ds->d_name) == md5)
+		{
+			debug("Cache::search_dir(): end", 1);
 			return true;	
+		}
 
+	debug("Cache::search_dir(): end", 1);
 	return false;
 }

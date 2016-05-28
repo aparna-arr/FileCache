@@ -3,6 +3,7 @@ using namespace std;
 
 std::string MD5_string(std::string str)
 {
+	debug("MD5_string(): begin", 1);
 	MD5_CTX mdContext;
 	unsigned char c[MD5_DIGEST_LENGTH];
 
@@ -14,6 +15,8 @@ std::string MD5_string(std::string str)
 	
 	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
 		sprintf(&c_result[i*2], "%02x", c[i]);
+	
+	debug("MD5_string(): end", 1);
 		
 	return string(c_result);
 }
@@ -24,6 +27,7 @@ string MD5_file(string filename)
 	// efficient alg for large files
 	// source: http://stackoverflow.com/questions/10324611/how-to-calculate-the-md5-hash-of-a-large-file-in-c
 
+	debug("MD5_file(): begin", 1);
 	unsigned char c[MD5_DIGEST_LENGTH];
 	
 	FILE * fp = fopen(filename.c_str(), "rb");
@@ -48,15 +52,22 @@ string MD5_file(string filename)
 
 	fclose(fp);		
 
+	debug("MD5_file(): end", 1);
 	return string(c_result);
 }
 
 bool compare_file_MD5(std::string md5_str, std::string filename)
 {
-	cerr << "MD5 of file is [" << MD5_file(filename) << "]" << endl;
-	cerr << "MD5 of str is  [" << md5_str << "]" << endl;
-	if (MD5_file(filename) == md5_str)
-		return true;
+//	cerr << "MD5 of file is [" << MD5_file(filename) << "]" << endl;
+//	cerr << "MD5 of str is  [" << md5_str << "]" << endl;
 
+	debug("compare_file_MD5(): begin", 1);
+	if (MD5_file(filename) == md5_str)
+	{
+		debug("compare_file_MD5(): end", 1);
+		return true;
+	}
+
+	debug("compare_file_MD5(): end", 1);
 	return false;
 }

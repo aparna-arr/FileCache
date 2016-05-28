@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "Test.h"
 using namespace std;
 
 int main (int argc, char * argv[])
@@ -7,23 +8,16 @@ int main (int argc, char * argv[])
 
 	try
 	{
-
 		handle_opts(argc, argv, cache_root, filename);	
-
-		cerr << "Your cache root is [" << cache_root << "], your filename is [" << filename << "]" << endl; 
-
 	}
 	catch (const invalid_argument &e)
 	{
-		cerr << "INVALID_ARGUMENT_ERROR: " << e.what() << endl << endl;
-		usage();
 		return 1;
 	}
 
-	cerr << "Testing MD5sum functions" << endl;
-	string md5test_str = "happy" ;
-	cerr << "string is [" + md5test_str + "]" << endl;
-	cerr << "md5 of string is [" << MD5_string(md5test_str) << "]" << endl;
+	Test * testCache = new Test();
+
+	testCache->test_all();
 
 	Cache * myCache = new Cache(cache_root, filename);
 	bool checkTest = myCache->check_cache();

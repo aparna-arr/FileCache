@@ -4,6 +4,7 @@
 #include<openssl/md5.h>
 #include<stdexcept>
 #include<cstring>
+#include"Debug.h"
 
 std::string MD5_string(std::string str);
 std::string MD5_file(std::string filename);

@@ -8,6 +8,7 @@
 #include<fstream>
 #include<sstream>
 #include"dirent.h"
+#include"Debug.h"
 
 #define CHROMSIZE 50 // max size of chromosome name in characters
 
