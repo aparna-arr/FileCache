@@ -14,6 +14,37 @@ Cache::Cache(void)
 	debug("Cache::Cache(): end", 1);
 }
 
+Cache::Cache(string cache_root)
+{
+	try
+	{
+		debug("Cache::Cache(string): begin", 1);
+
+		struct stat s;
+		new_cache = false;
+		can_read_data = false;
+
+		if (stat(cache_root.c_str(), &s) == 0)
+			if (S_ISDIR(s.st_mode))
+				root = cache_root;
+			else
+				throw runtime_error("Path [" + cache_root + "] exists but is not a directory! Likely you have given the path of a FILE.");
+		else // set flag to create a new cache dir whenever another function is called, throw errors for clear_cache() and rm_file_cache()
+		{
+//			cerr << "Cache does not exist: will create new cache\n";
+			new_cache = true;
+			root = cache_root;
+		}
+		
+		debug("Cache::Cache(string): end", 1);
+	}
+	catch (const runtime_error &e)
+	{
+		cerr << "CACHE: Cache(): RUNTIME_ERROR: " << e.what() << endl;
+	}
+}
+
+
 Cache::Cache(string cache_root, string file)
 {
 	try
@@ -171,6 +202,12 @@ bool Cache::rm_file_cache(string md5file)
 			md5path = root + md5sum_filename + "/" + MD5_FILENAME;
 			fullpath = root + md5sum_filename + "/" + CHR_SUBDIR;
 		}
+
+		DIR * testdir;
+		if ((testdir = opendir(filepath.c_str())) == NULL)
+			throw runtime_error("rm_file_cache(): could not open DIR [" + filepath + "]!");
+
+		closedir(testdir);
 		
 		ifstream filetest(md5path.c_str());
 	

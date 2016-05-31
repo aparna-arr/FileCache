@@ -22,6 +22,7 @@ class Cache
 {
 	public:
 	Cache(void); // you better know what you're doing if you use this: only included for cases where you want to make an array of new Cache objs ptrs to init later or something
+	Cache(std::string cache_root);
 	Cache(std::string cache_root, std::string file);
 
 	bool get_data(std::unordered_map<std::string, std::vector<Peak>> *& data); // runs check_cache()	

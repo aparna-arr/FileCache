@@ -6,14 +6,16 @@ void usage(void)
 	cout << "usage: cache [-d <DEBUG_LEVEL 0..3>] -c <CACHE ROOT PATH> -i <WIGFILE>" << endl;
 }
 
-void handle_opts(int argc, char * argv[], string &cache_root, string &filename)
+void handle_opts(int argc, char * argv[], string &cache_root, string &filename, bool & remove, bool & remove_all)
 {
 	try 
 	{
 	int curr_opt;
 	bool has_i = false, has_c = false;
+	remove = false;
+	remove_all = false;
 	
-	while ( (curr_opt = getopt(argc, argv, "i:c:d:")) != -1)
+	while ( (curr_opt = getopt(argc, argv, "i:c:d:rf")) != -1)
 		switch(curr_opt)
 		{
 			case 'i':
@@ -34,6 +36,12 @@ void handle_opts(int argc, char * argv[], string &cache_root, string &filename)
 				DebugLevel(debugopt);
 			}
 				break;
+			case'r':
+				remove = true;
+				break;
+			case'f':
+				remove_all = true;
+				break;
 			case '?':
 				if (optopt == 'i')
 					throw invalid_argument ("-i requires a STRING argument!");
@@ -49,11 +57,11 @@ void handle_opts(int argc, char * argv[], string &cache_root, string &filename)
 				throw invalid_argument ("Something went wrong: default switch case");	
 		}
 	
-	if (!has_i)
+	if (!has_i && !remove_all)
 		throw invalid_argument ("option -i required!");
 
 	if (!has_c)
-		throw invalid_argument ("option -i required!");
+		throw invalid_argument ("option -c required!");
 	}
 	catch (const invalid_argument &e)
 	{
