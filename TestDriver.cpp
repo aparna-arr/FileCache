@@ -11,5 +11,6 @@ int main(int argc, char * argv[])
 		cout << endl << RED << "***TESTS FAILED***" << DEFAULT << endl;
 	else
 		cout << endl << RED << "***TESTS PASSED***" << DEFAULT << endl;
-	
+
+	delete testCache;	
 }

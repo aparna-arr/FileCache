@@ -15,12 +15,11 @@ bool WigCache::serialize(std::string file)
 		debug("WigCache::serialize(): begin", 1);
 		unordered_map<string, vector<Peak>> * peaks_map = new unordered_map<string, vector<Peak>>;
 
-//		cerr << "serialize() before readInWig" << endl;
 		readInWig(file, peaks_map);
-//		cerr << "serialize() after readInWig" << endl;
 		
 		for (auto iter = peaks_map->begin(); iter != peaks_map->end(); iter++)
 		{
+			debug("WigCache::serialize(): chromosome: " + iter->first, 2);
 			int numPeaks = (iter->second).size();
 			Peak * peaks_array;
 			peaks_array = new Peak[numPeaks];
@@ -28,8 +27,10 @@ bool WigCache::serialize(std::string file)
 			vectorToArray((iter->second), peaks_array);
 			
 			flatten(peaks_array, numPeaks, path + iter->first + ".dat");
+			delete [] peaks_array;
 		}
 
+		delete peaks_map;
 		debug("WigCache::serialize(): end", 1);
 		return true;
 	}
@@ -63,16 +64,17 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 				chrfiles.push_back(ds->d_name);
 
 		if (chrfiles.size() == 0)
+		{
+			delete data;
 			throw runtime_error("deserialize(): DIR [" + path+ "] contains no .dat files!");
+		}
 
 		for (vector<string>::iterator iter = chrfiles.begin(); iter != chrfiles.end(); iter++)
 		{
 			string curr_chr = (*iter).substr(0,(*iter).find(".dat"));
 			Peak * peakAr;
 			int numPeaks;
-//			cerr << "deserialize(): before unflatten for chr [" << curr_chr << "]" << endl; 
 			unflatten(peakAr, numPeaks, path + "/" + *iter);
-//			cerr << "deserialize(): after unflatten for chr [" << curr_chr << "]" << endl; 
 			
 			arrayToVector(peakAr, numPeaks, (*data)[curr_chr]);
 		}
@@ -156,12 +158,14 @@ bool WigCache::vectorToArray(std::vector<Peak> & peaks_vec, Peak *& peaks_ar)
 	vector<Peak>::iterator it = peaks_vec.begin();
 	int i = 0;
 
-	while (peaks_vec.size() != 0)
+	while (it != peaks_vec.end())
 	{
 		peaks_ar[i] = *it;
-		it = peaks_vec.erase(it);
+		it++;
 		i++;
 	}
+		
+	peaks_vec.erase(peaks_vec.begin(), peaks_vec.end());
 
 	debug("WigCache::vectorToArray(): end", 1);
 	return true;

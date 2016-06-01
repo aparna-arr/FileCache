@@ -11,7 +11,7 @@ std::string MD5_string(std::string str)
 	MD5_Update(&mdContext, (unsigned char *)str.c_str(), str.length());
 	MD5_Final(c, &mdContext);
 	
-	char c_result[MD5_DIGEST_LENGTH*2+1];
+	char c_result[MD5_DIGEST_LENGTH*2];
 	
 	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
 		sprintf(&c_result[i*2], "%02x", c[i]);
@@ -45,7 +45,7 @@ string MD5_file(string filename)
 	
 	MD5_Final(c, &mdContext);
 	
-	char c_result[MD5_DIGEST_LENGTH*2+1];
+	char c_result[MD5_DIGEST_LENGTH*2];
 
 	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
 		sprintf(&c_result[i*2], "%02x", c[i]);
@@ -58,16 +58,18 @@ string MD5_file(string filename)
 
 bool compare_file_MD5(std::string md5_str, std::string filename)
 {
-//	cerr << "MD5 of file is [" << MD5_file(filename) << "]" << endl;
-//	cerr << "MD5 of str is  [" << md5_str << "]" << endl;
-
 	debug("compare_file_MD5(): begin", 1);
+	debug("MD5 of file is :[" + MD5_file(filename) + "]",3);
+	debug("MD5 of string is :[" + md5_str + "]",3);
+
 	if (MD5_file(filename) == md5_str)
 	{
+		debug("compare_file_MD5(): MD5sums are the same",2);
 		debug("compare_file_MD5(): end", 1);
 		return true;
 	}
 
+	debug("compare_file_MD5(): MD5sums are different",2);
 	debug("compare_file_MD5(): end", 1);
 	return false;
 }

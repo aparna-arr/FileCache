@@ -37,7 +37,7 @@ class Cache
 	bool update_cache(void); // removes previous cache for a single file, rebuilds
 
 	std::string get_MD5sum_path(std::string MD5str);
-	std::string retrieve_MD5sum(std::string path);
+	std::string retrieve_MD5sum(std::string path, bool & valid);
 	bool search_dir(std::string md5);
 
 	std::string root, filename;

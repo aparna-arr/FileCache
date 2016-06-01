@@ -8,6 +8,11 @@ Test::Test()
 	test_str = "whatismymd5";
 }
 
+Test::~Test()
+{
+	remove(testwig.c_str());
+}
+
 bool Test::test_all(void)
 {
 	cout << GREEN << "*** Begin Test Suite ***" << DEFAULT << endl;
@@ -134,6 +139,8 @@ bool Test::test_serialize(void)
 		return false;
 	}
 
+	delete wig_1;
+
 	cout << RED << "\tPASS" << DEFAULT << endl;
 
 	cout << endl << RED << "deserialize()" << DEFAULT << endl;
@@ -153,6 +160,8 @@ bool Test::test_serialize(void)
 		cout << RED << "\tFAIL" << DEFAULT << endl;
 		return false;
 	}
+
+	delete wig_2;
 	
 	cout << RED << "\tPASS" << DEFAULT << endl;
 
@@ -170,7 +179,23 @@ bool Test::test_serialize(void)
 	deserialize_peaks = datastructure_to_string(data);
 	
 	cout << deserialize_peaks << endl;
+
+	DIR * dirp;
+	dirp = opendir(path.c_str());
+	struct dirent * ds;
+	size_t found;
+
+	while((ds = readdir(dirp)) != NULL)
+	{
+		if ((found = string(ds->d_name).find(".dat")) != string::npos)
+		{
+			string curr_file = path + string(ds->d_name);
+			remove(curr_file.c_str());
+		}
+	}
 	
+	rmdir(path.c_str());
+
 	if (deserialize_peaks != file_peaks)
 	{
 		cout << RED << "\tFAIL" << DEFAULT << endl;
@@ -190,7 +215,7 @@ bool Test::test_cache(void)
 
 	cout << "\t- creating new Cache object" << endl;
 		
-	string cacheRoot = "TEST_CACHE";
+	string cacheRoot = "TEST_CACHE/";
 
 	Cache * testCache = new Cache(cacheRoot, testwig);
 
@@ -205,6 +230,7 @@ bool Test::test_cache(void)
 		cout << RED << "\tFAIL" << DEFAULT << endl;
 		return false;
 	}
+
 
 	cout << RED << "\tPASS" << DEFAULT << endl;
 
@@ -230,6 +256,8 @@ bool Test::test_cache(void)
 		return false;
 	}
 
+	delete testCache2;
+
 	cout << RED << "\tPASS" << DEFAULT << endl;
 
 	unordered_map<string, vector<Peak>> * data = new unordered_map<string, vector<Peak>>;
@@ -244,6 +272,8 @@ bool Test::test_cache(void)
 		return false;
 	}
 
+	delete testCache;
+
 	cout << "\t- testing if peaks are the same as file peaks" << endl;
 
 	string data_1 = datastructure_to_string(data);
@@ -254,13 +284,16 @@ bool Test::test_cache(void)
 		return false;
 	}
 
+
 	cout << RED << "\tPASS" << DEFAULT << endl;
 
 	cout << endl << RED << "get_data() from different instance" << DEFAULT << endl;
+
+	unordered_map<string, vector<Peak>> * data2 = new unordered_map<string, vector<Peak>>;
 	
 	Cache * testCache3 = new Cache(cacheRoot, testwig);	
 
-	bool checkDataTest2 = testCache3->get_data(data);
+	bool checkDataTest2 = testCache3->get_data(data2);
 
 	if (!checkDataTest2)
 	{
@@ -268,6 +301,7 @@ bool Test::test_cache(void)
 		return false;
 	}
 
+	delete testCache3;
 	cout << "\t- testing if peaks are the same as file peaks" << endl;
 
 	string data_2 = datastructure_to_string(data);
@@ -277,6 +311,9 @@ bool Test::test_cache(void)
 		cout << RED << "\tFAIL" << DEFAULT << endl;
 		return false;
 	}
+
+	delete data;
+	delete data2;
 
 	cout << RED << "\tPASS" << DEFAULT << endl;
 	
@@ -294,6 +331,8 @@ bool Test::test_cache(void)
 		cout << RED << "\tFAIL" << DEFAULT << endl;
 		return false;
 	}
+
+	delete testCache4;
 
 	cout << RED << "\tPASS" << DEFAULT << endl;
 		
@@ -316,6 +355,8 @@ bool Test::test_cache(void)
 		cout << RED << "\tFAIL" << DEFAULT << endl;
 		return false;
 	}
+
+	delete testCache5;
 
 	cout << RED << "\tPASS" << DEFAULT << endl;
 

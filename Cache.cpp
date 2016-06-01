@@ -106,12 +106,16 @@ bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
 
 		if (myFileCache->deserialize(data))
 		{
+			delete myFileCache;
 			debug("Cache::get_data(): end", 1);
-
+			
 			return true;
 		}
 		else 
+		{
+			delete myFileCache;
 			throw runtime_error("Was not able to unserialize data!");
+		}
 	}
 	catch (const runtime_error &e)
 	{
@@ -146,8 +150,15 @@ bool Cache::check_cache(void)
 				// check if file is same
 				// get full path to the MD5sum file of directory
 				string path_to_MD5sum = get_MD5sum_path(MD5_string(filename)); 
-				string cache_MD5sum = retrieve_MD5sum(path_to_MD5sum);
-				if (compare_file_MD5(cache_MD5sum, filename))
+				bool valid = false;
+				string cache_MD5sum = retrieve_MD5sum(path_to_MD5sum, valid);
+
+				stringstream ss;
+				ss << valid;
+
+				debug("Cache::check_cache(): valid is : " + ss.str(), 2);
+
+				if (compare_file_MD5(cache_MD5sum, filename) && valid)
 				{
 					// cache is updated, all is well. Can read in data now
 					can_read_data = true;
@@ -365,10 +376,7 @@ bool Cache::create_cache(void)
 		fullpath = root + MD5_string(filename) + "/" + CHR_SUBDIR;
 	}
 
-//	cerr << "create_cache() before mkdir" << endl;
 	int status = mkdir(filepath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
-//	cerr << "create_cache() after mkdir" << endl;
-
 	if (status != 0)
 		throw runtime_error("create_cache(): Directory creation of [" + filepath + "] was not successful!");	
 
@@ -376,8 +384,6 @@ bool Cache::create_cache(void)
 	
 	if (!md5file.is_open())
 		throw runtime_error("create_cache(): cannot open new md5 file path [" + md5path + "]");
-
-//	cerr << "create_cache(): MD5_file is [" << MD5_file(filename) << "] for [" << filename << "]" << endl;
 
 	md5file << MD5_file(filename);
 
@@ -387,19 +393,29 @@ bool Cache::create_cache(void)
 	if (chr_status != 0)
 		throw runtime_error("create_cache(): Directory creation of [" + fullpath + "] was not successful!");	
 
-//	cerr << "create_cache() before new WigCache()" << endl;
 	WigCache * myFileCache = new WigCache(fullpath);
-//	cerr << "create_cache() after new WigCache()" << endl;
 
 	if (myFileCache->serialize(filename))
 	{
+		delete myFileCache;
+		
+		fstream md5file_valid;
+		
+		md5file_valid.open(md5path.c_str(), ios::out | ios::app | ios::binary);
+
+		md5file_valid << '1';
+
+		md5file_valid.close();
+
 		can_read_data = true;
 		debug("Cache::create_cache(): end", 1);
 		return true;
 	}
 	else
+	{
+		delete myFileCache;
 		throw runtime_error("create_cache(): Was not able to serialize data!");
-
+	}
 	return false;	
 }
 
@@ -432,10 +448,10 @@ string Cache::get_MD5sum_path(string MD5str)
 	return fullpath;
 }
 
-string Cache::retrieve_MD5sum(string path)
+string Cache::retrieve_MD5sum(string path, bool & valid)
 {
 	debug("Cache::retrieve_MD5sum(): begin", 1);
-	ifstream md5file(path);
+	ifstream md5file(path, ios::binary);
 
 	if (!md5file.is_open())
 		throw runtime_error("retrieve_MD5sum(): Could not open md5file [" + path + "]!");	
@@ -450,8 +466,44 @@ string Cache::retrieve_MD5sum(string path)
 
 	md5file.close();
 
-	debug("Cache::retrieve_MD5sum(): end", 1);
+	char * str = (char*) line.c_str();
+	
+	if (strlen(str) < MD5_DIGEST_LENGTH*2)
+		throw runtime_error("retrieve_MD5sum(): something is wrong with your md5 line! [" + line + "], it is < 32 characters!");
+	
+	stringstream ss;		
+	ss << strlen(str);
 
+	debug("Cache::retrieve_MD5sum(): strlen is " + ss.str(),2);
+
+	if (strlen(str) == MD5_DIGEST_LENGTH*2+1)
+	{
+		char md5_str[MD5_DIGEST_LENGTH*2+1];
+		char check_valid = str[MD5_DIGEST_LENGTH*2];
+ 
+		for (int i = 0; i < MD5_DIGEST_LENGTH*2; i++)
+			md5_str[i] = str[i];
+
+		md5_str[MD5_DIGEST_LENGTH*2] = '\0';
+				
+		stringstream ss2;
+		ss2 << check_valid;
+		debug("Cache::retrieve_MD5sum(): check_valid is [" + ss2.str() + "]",2);
+
+		if (check_valid != '1')
+			valid = false;
+		else
+			valid = true;	
+		
+		stringstream ss3;
+		ss3 << valid;
+
+		debug("Cache::retrieve_MD5sum(): valid is [" + ss3.str() + "]", 2);	
+		return string(md5_str);
+	}
+
+	valid = false;
+	debug("Cache::retrieve_MD5sum(): end", 1);
 	return line;
 }
 

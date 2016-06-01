@@ -7,6 +7,7 @@ class Test
 {
 	public:
 	Test();
+	~Test();
 
 	bool test_all(void);
 	bool test_md5(void);
