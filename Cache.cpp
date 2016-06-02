@@ -31,7 +31,6 @@ Cache::Cache(string cache_root)
 				throw runtime_error("Path [" + cache_root + "] exists but is not a directory! Likely you have given the path of a FILE.");
 		else // set flag to create a new cache dir whenever another function is called, throw errors for clear_cache() and rm_file_cache()
 		{
-//			cerr << "Cache does not exist: will create new cache\n";
 			new_cache = true;
 			root = cache_root;
 		}
@@ -62,7 +61,6 @@ Cache::Cache(string cache_root, string file)
 				throw runtime_error("Path [" + cache_root + "] exists but is not a directory! Likely you have given the path of a FILE.");
 		else // set flag to create a new cache dir whenever another function is called, throw errors for clear_cache() and rm_file_cache()
 		{
-//			cerr << "Cache does not exist: will create new cache\n";
 			new_cache = true;
 			root = cache_root;
 		}

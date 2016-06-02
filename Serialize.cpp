@@ -77,6 +77,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 			unflatten(peakAr, numPeaks, path + "/" + *iter);
 			
 			arrayToVector(peakAr, numPeaks, (*data)[curr_chr]);
+			delete [] peakAr;
 		}
 
 		debug("WigCache::deserialize(): end", 1);
