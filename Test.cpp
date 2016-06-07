@@ -149,7 +149,7 @@ bool Test::test_serialize(void)
 
 	WigCache * wig_2 = new WigCache(path);
 
-	unordered_map<string, vector<Peak>> * data = new unordered_map<string,vector<Peak>>;
+	unordered_map<string, PeakInfo> * data = new unordered_map<string,PeakInfo>;
 
 	bool test_deserialize = wig_2->deserialize(data);
 
@@ -260,7 +260,7 @@ bool Test::test_cache(void)
 
 	cout << RED << "\tPASS" << DEFAULT << endl;
 
-	unordered_map<string, vector<Peak>> * data = new unordered_map<string, vector<Peak>>;
+	unordered_map<string, PeakInfo> * data = new unordered_map<string, PeakInfo>;
 
 	cout << endl << RED << "get_data() from same instance" << DEFAULT << endl;
 
@@ -289,7 +289,7 @@ bool Test::test_cache(void)
 
 	cout << endl << RED << "get_data() from different instance" << DEFAULT << endl;
 
-	unordered_map<string, vector<Peak>> * data2 = new unordered_map<string, vector<Peak>>;
+	unordered_map<string, PeakInfo> * data2 = new unordered_map<string, PeakInfo>;
 	
 	Cache * testCache3 = new Cache(cacheRoot, testwig);	
 
@@ -397,12 +397,13 @@ void Test::modify_file(void)
 string Test::file_cat(void)
 {
 	ifstream fp(testwig.c_str());
-	unordered_map<string, vector<Peak>> * peaks = new unordered_map<string, vector<Peak>>;
+	unordered_map<string, PeakInfo> * peaks = new unordered_map<string, PeakInfo>;
 	string line;
 
         string curr_chr = "INIT";
         int span;
 
+	vector<Peak> * curr_peaks = new vector<Peak>;
         while(getline(fp, line) && !fp.bad())
         {
                 stringstream ss(line);
@@ -427,7 +428,15 @@ string Test::file_cat(void)
                         spanstr >> span;
 
                         if (chr != curr_chr)
+			{
+				(*peaks)[curr_chr].numPeaks = curr_peaks->size();
+				(*peaks)[curr_chr].peaks = new Peak[(*peaks)[curr_chr].numPeaks];
+				for (unsigned int i = 0; i < (*peaks)[curr_chr].numPeaks; i++)
+					(*peaks)[curr_chr].peaks[i] = (*curr_peaks)[i];
+
+				curr_peaks->erase(curr_peaks->begin(), curr_peaks->end());
                                 curr_chr = chr;
+			}
              
          }
                 else if (ss >> pos >> value)
@@ -437,19 +446,42 @@ string Test::file_cat(void)
                         tmp.end = pos + span;
                         tmp.value = value;
 
-                        (*peaks)[curr_chr].push_back(tmp);
+                        (*curr_peaks).push_back(tmp);
                 }
         }
+
+	(*peaks)[curr_chr].numPeaks = curr_peaks->size();
+	(*peaks)[curr_chr].peaks = new Peak[(*peaks)[curr_chr].numPeaks];
+
+	for (unsigned int i = 0; i < (*peaks)[curr_chr].numPeaks; i++)
+		(*peaks)[curr_chr].peaks[i] = (*curr_peaks)[i];
+
+	curr_peaks->erase(curr_peaks->begin(), curr_peaks->end());
+	delete curr_peaks;
 
 	return datastructure_to_string(peaks);
 }
 
-bool peakCmp (Peak peak1, Peak peak2)
+void insertionSort(PeakInfo & array)
 {
-	return (peak1.start < peak2.start);
+	unsigned int size = array.numPeaks;
+	
+	unsigned int j;
+	for (unsigned int i = 1; i < size; i++)
+	{
+		Peak tmp = array.peaks[i];
+		j = i - 1;
+	
+		while (j >= 0 && array.peaks[j].start > tmp.start)
+		{
+			array.peaks[j+1] = array.peaks[j];
+			j--;
+		}
+		array.peaks[j+1] = tmp;
+	}
 }
 
-string Test::datastructure_to_string(unordered_map<string, vector<Peak>> *& data)
+string Test::datastructure_to_string(unordered_map<string, PeakInfo> *& data)
 {
 	vector<string> chrlist;
 	string outstring = "";
@@ -457,18 +489,18 @@ string Test::datastructure_to_string(unordered_map<string, vector<Peak>> *& data
 	for (auto iter = (*data).begin(); iter != (*data).end(); iter++)
 	{
 		chrlist.push_back(iter->first);
-		sort((iter->second).begin(), (iter->second).end(), peakCmp);				
+		insertionSort(iter->second);
 	}
 
 	sort (chrlist.begin(), chrlist.end());
-	
+
 	for (vector<string>::iterator it = chrlist.begin(); it != chrlist.end(); it++)
-		for (vector<Peak>::iterator it2 = (*data)[*it].begin(); it2 != (*data)[*it].end(); it2++)
+		for (unsigned int i = 0; i < (*data)[*it].numPeaks; i++)
 		{
 			stringstream start_str, end_str, value_str;
-			start_str << it2->start;
-			end_str << it2->end;
-			value_str << it2->value;
+			start_str << (*data)[*it].peaks[i].start;
+			end_str << (*data)[*it].peaks[i].end;
+			value_str << (*data)[*it].peaks[i].value;
 
 			outstring += *it + "\t" + start_str.str() + "\t" + end_str.str() + "\t" + value_str.str() + "\n";
 		}

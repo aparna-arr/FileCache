@@ -14,6 +14,7 @@
 #include"dirent.h"
 #include<cstdio>
 #include"Debug.h"
+#include"Utils.h"
 
 #define MD5_FILENAME "md5sum.txt"
 #define CHR_SUBDIR "chrs/"
@@ -25,7 +26,7 @@ class Cache
 	Cache(std::string cache_root);
 	Cache(std::string cache_root, std::string file);
 
-	bool get_data(std::unordered_map<std::string, std::vector<Peak>> *& data); // runs check_cache()	
+	bool get_data(std::unordered_map<std::string, PeakInfo> *& data); // runs check_cache()	
 	
 	bool check_cache(void); // checks if previous cache is valid for a single file, if not creates or rebuilds
 	bool rm_file_cache(std::string md5file = ""); // deletes a single file from cache 

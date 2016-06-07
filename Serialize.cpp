@@ -13,21 +13,14 @@ bool WigCache::serialize(std::string file)
 	try
 	{
 		debug("WigCache::serialize(): begin", 1);
-		unordered_map<string, vector<Peak>> * peaks_map = new unordered_map<string, vector<Peak>>;
+		unordered_map<string, PeakInfo> * peaks_map = new unordered_map<string, PeakInfo>;
 
 		readInWig(file, peaks_map);
 		
 		for (auto iter = peaks_map->begin(); iter != peaks_map->end(); iter++)
 		{
 			debug("WigCache::serialize(): chromosome: " + iter->first, 2);
-			int numPeaks = (iter->second).size();
-			Peak * peaks_array;
-			peaks_array = new Peak[numPeaks];
-
-			vectorToArray((iter->second), peaks_array);
-			
-			flatten(peaks_array, numPeaks, path + iter->first + ".dat");
-			delete [] peaks_array;
+			flatten((*peaks_map)[iter->first].peaks, (*peaks_map)[iter->first].numPeaks, path + iter->first + ".dat");
 		}
 
 		delete peaks_map;
@@ -43,7 +36,7 @@ bool WigCache::serialize(std::string file)
 	return false;
 }
 
-bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *& data)
+bool WigCache::deserialize(std::unordered_map<std::string, PeakInfo> *& data)
 {
 	try
 	{
@@ -57,7 +50,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 		size_t found;
 		vector<string> chrfiles;
 
-		data = new unordered_map<string, vector<Peak>>;
+		data = new unordered_map<string, PeakInfo>;
 
 		while((ds = readdir(dirp)) != NULL)
 			if ((found = string(ds->d_name).find(".dat")) != string::npos)
@@ -72,12 +65,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 		for (vector<string>::iterator iter = chrfiles.begin(); iter != chrfiles.end(); iter++)
 		{
 			string curr_chr = (*iter).substr(0,(*iter).find(".dat"));
-			Peak * peakAr;
-			int numPeaks;
-			unflatten(peakAr, numPeaks, path + "/" + *iter);
-			
-			arrayToVector(peakAr, numPeaks, (*data)[curr_chr]);
-			delete [] peakAr;
+			unflatten((*data)[curr_chr].peaks, (*data)[curr_chr].numPeaks, path + "/" + *iter);
 		}
 
 		debug("WigCache::deserialize(): end", 1);
@@ -92,7 +80,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, std::vector<Peak>> *&
 	return false;
 }
 
-bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, std::vector<Peak>> *& peaks)
+bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, PeakInfo> *& peaks)
 {
 	debug("WigCache::readInWig(): begin", 1);
 	ifstream fp(filename);
@@ -106,6 +94,7 @@ bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, s
 	string line;
 
 	string curr_chr = "INIT";
+	vector<Peak> * curr_chr_peaks = new vector<Peak>;
 	int span;
 
 	while(getline(fp, line) && !fp.bad())
@@ -133,7 +122,28 @@ bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, s
 			spanstr >> span;
 
 			if (chr != curr_chr)
+			{
+				if (peaks->find(chr) != peaks->end())
+				{
+					fp.close();
+					delete curr_chr_peaks;
+					delete peaks;
+
+					throw runtime_error("Your wig file is not sorted by chromosome!");
+				}
+	
+				if (curr_chr_peaks->size() > 0)
+				{
+					(*peaks)[curr_chr].numPeaks = curr_chr_peaks->size();
+					(*peaks)[curr_chr].peaks = new Peak[(*peaks)[curr_chr].numPeaks];
+
+					for (unsigned int i = 0; i < (*peaks)[curr_chr].numPeaks; i++)
+						(*peaks)[curr_chr].peaks[i] = (*curr_chr_peaks)[i];
+				}
+		
+				curr_chr_peaks->erase(curr_chr_peaks->begin(), curr_chr_peaks->end());							
 				curr_chr = chr;
+			}
 		}
 		else if (ss >> pos >> value)
 		{
@@ -142,9 +152,20 @@ bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, s
 			tmp.end = pos + span;
 			tmp.value = value;
 	
-			(*peaks)[curr_chr].push_back(tmp);
+			curr_chr_peaks->push_back(tmp);
 		}
 	}
+
+	if (curr_chr_peaks->size() > 0)
+	{
+		(*peaks)[curr_chr].numPeaks = curr_chr_peaks->size();
+		(*peaks)[curr_chr].peaks = new Peak[(*peaks)[curr_chr].numPeaks];
+
+		for (unsigned int i = 0; i < (*peaks)[curr_chr].numPeaks; i++)
+			(*peaks)[curr_chr].peaks[i] = (*curr_chr_peaks)[i];
+	}
+		
+	curr_chr_peaks->erase(curr_chr_peaks->begin(), curr_chr_peaks->end());	
 
 	if ((*peaks).empty())	
 		throw runtime_error("readInWig(): Peaks are empty!");
@@ -153,37 +174,7 @@ bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, s
 	return true;
 }
 
-bool WigCache::vectorToArray(std::vector<Peak> & peaks_vec, Peak *& peaks_ar) 
-{
-	debug("WigCache::vectorToArray(): begin", 1);
-	vector<Peak>::iterator it = peaks_vec.begin();
-	int i = 0;
-
-	while (it != peaks_vec.end())
-	{
-		peaks_ar[i] = *it;
-		it++;
-		i++;
-	}
-		
-	peaks_vec.erase(peaks_vec.begin(), peaks_vec.end());
-
-	debug("WigCache::vectorToArray(): end", 1);
-	return true;
-}
-
-bool WigCache::arrayToVector(Peak * peaks_ar, int numPeaks, vector<Peak> & peaks_vec)
-{
-	debug("WigCache::arrayToVector(): begin", 1);
-	for (int i = 0; i < numPeaks; i++)
-		peaks_vec.push_back(peaks_ar[i]);
-	
-	// delete peaks_ar ???
-	debug("WigCache::arrayToVector(): end", 1);
-	return true;
-}
-
-bool WigCache::flatten(Peak * peaks_ar, int numPeaks, std::string file)
+bool WigCache::flatten(Peak * peaks_ar, unsigned int numPeaks, std::string file)
 {
 	debug("WigCache::flatten(): begin", 1);
 	ofstream out(file.c_str(), ios::binary);
@@ -193,7 +184,7 @@ bool WigCache::flatten(Peak * peaks_ar, int numPeaks, std::string file)
 
 	out.write(reinterpret_cast<char*>(&numPeaks), sizeof(int));
 	
-	for (int i = 0; i < numPeaks; i++)
+	for (unsigned int i = 0; i < numPeaks; i++)
 		out.write(reinterpret_cast<char*>(&(peaks_ar[i])), sizeof(Peak));
 
 	out.close();
@@ -203,7 +194,7 @@ bool WigCache::flatten(Peak * peaks_ar, int numPeaks, std::string file)
 	return true;
 }
 
-bool WigCache::unflatten(Peak *& peaks_ar, int & numPeaks, std::string file)
+bool WigCache::unflatten(Peak *& peaks_ar, unsigned int & numPeaks, std::string file)
 {
 	debug("WigCache::unflatten(): begin", 1);
 	ifstream in(file.c_str(), ios::binary);
@@ -215,7 +206,7 @@ bool WigCache::unflatten(Peak *& peaks_ar, int & numPeaks, std::string file)
 
 	peaks_ar = new Peak[numPeaks];
 
-	for (int i = 0; i < numPeaks; i++)
+	for (unsigned int i = 0; i < numPeaks; i++)
 		in.read(reinterpret_cast<char*>(&(peaks_ar[i])), sizeof(Peak));
 	
 	in.close();

@@ -83,7 +83,7 @@ Cache::Cache(string cache_root, string file)
 }
 
 // returns TRUE if data is successfully gotten, FALSE if not
-bool Cache::get_data(unordered_map<string, vector<Peak>> *& data)
+bool Cache::get_data(unordered_map<string, PeakInfo> *& data)
 {
 	try
 	{

@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS := -Wall -std=c++11 -g
-OBJECTS := Utils.o Cache.o MD5sum.o Serialize.o Debug.o Test.o
+OBJECTS := UserIn.o Utils.o Cache.o MD5sum.o Serialize.o Debug.o Test.o
 
 all: cache test-cache
 
@@ -10,14 +10,17 @@ cache: Main.o $(OBJECTS)
 test-cache: TestDriver.o $(OBJECTS)
 	$(CXX) $(CXXFLAGS) TestDriver.o $(OBJECTS) -o $@ -lssl -lcrypto
 
-Main.o: Utils.h Test.h
+Main.o: UserIn.h Cache.h
 	$(CXX) $(CXXFLAGS) -c Main.cpp 
 
-TestDriver.o: Utils.h Test.h
+TestDriver.o: Test.h 
 	$(CXX) $(CXXFLAGS) -c TestDriver.cpp 
 
 Test.o: Test.h
 	$(CXX) $(CXXFLAGS) -c Test.cpp 
+
+UserIn.o: UserIn.h
+	$(CXX) $(CXXFLAGS) -c UserIn.cpp 
 
 Utils.o: Utils.h
 	$(CXX) $(CXXFLAGS) -c Utils.cpp 
