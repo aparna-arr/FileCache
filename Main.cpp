@@ -1,5 +1,6 @@
 #include "Cache.h"
-#include "UserIn.cpp"
+#include "Utils.h"
+#include "UserInput.h"
 using namespace std;
 
 int main (int argc, char * argv[])
