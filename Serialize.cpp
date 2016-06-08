@@ -59,6 +59,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, PeakInfo> *& data)
 		if (chrfiles.size() == 0)
 		{
 			delete data;
+			closedir(dirp);
 			throw runtime_error("deserialize(): DIR [" + path+ "] contains no .dat files!");
 		}
 
@@ -69,6 +70,7 @@ bool WigCache::deserialize(std::unordered_map<std::string, PeakInfo> *& data)
 		}
 
 		debug("WigCache::deserialize(): end", 1);
+		closedir(dirp);
 		return true;
 	}
 	catch (const runtime_error &e)
@@ -79,7 +81,6 @@ bool WigCache::deserialize(std::unordered_map<std::string, PeakInfo> *& data)
 
 	return false;
 }
-
 bool WigCache::readInWig(std::string filename, std::unordered_map<std::string, PeakInfo> *& peaks)
 {
 	debug("WigCache::readInWig(): begin", 1);

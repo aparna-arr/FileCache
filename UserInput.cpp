@@ -1,6 +1,12 @@
 #include"UserInput.h"
 using namespace std;
 
+void usage(void)
+{
+	cout << "usage: cache [-d <DEBUG_LEVEL 0..3>] -c <CACHE ROOT PATH> -i <WIGFILE>" << endl;
+}
+
+
 void handle_opts(int argc, char * argv[], std::string &cache_root, std::string &filename, bool & remove, bool & remove_all)
 {
 	try 

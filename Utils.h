@@ -12,9 +12,10 @@
 #define BLUE "\033[34m"
 #define DEFAULT "\033[0m"
 
-void usage(void);
 
 std::string conv(int num);
 std::string conv(double num);
+
+bool toInt(std::string str, int & num);
 
 #endif

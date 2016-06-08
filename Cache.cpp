@@ -123,7 +123,6 @@ bool Cache::get_data(unordered_map<string, PeakInfo> *& data)
 	
 	return false;	
 }
-
 /* 
  * Check if this file's cache is valid
  * Also creates new cache dir if one does not exist

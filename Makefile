@@ -1,41 +1,29 @@
 CXX := g++
 CXXFLAGS := -Wall -std=c++11 -g
-OBJECTS := Utils.o Cache.o MD5sum.o Serialize.o Debug.o Test.o
+LDFLAGS := -lssl -lcrypto
 
-all: cache test-cache
+SRC_COMMON := Cache.cpp Debug.cpp MD5sum.cpp Serialize.cpp Utils.cpp
+SRC_TEST := TestDriver.cpp Test.cpp $(SRC_COMMON)
+SRC_PRG := Main.cpp UserInput.cpp $(SRC_COMMON)
 
-cache: Main.o UserInput.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) Main.o UserInput.o $(OBJECTS) -o $@ -lssl -lcrypto
+OBJ_TEST := $(SRC_TEST:.cpp=.o)
+OBJ_PRG := $(SRC_PRG:.cpp=.o)
 
-test-cache: TestDriver.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) TestDriver.o $(OBJECTS) -o $@ -lssl -lcrypto
+EXEC_PRG := cache
+EXEC_TEST := test-cache
 
-Main.o: UserInput.h Cache.h Utils.h 
-	$(CXX) $(CXXFLAGS) -c Main.cpp 
+all: $(EXEC_PRG) $(EXEC_TEST)
 
-TestDriver.o: Utils.h Test.h
-	$(CXX) $(CXXFLAGS) -c TestDriver.cpp 
+$(EXEC_PRG): $(OBJ_PRG)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
-Test.o: Test.h
-	$(CXX) $(CXXFLAGS) -c Test.cpp 
+$(EXEC_TEST): $(OBJ_TEST)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
-Utils.o: Utils.h
-	$(CXX) $(CXXFLAGS) -c Utils.cpp 
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-UserInput.o: UserInput.h
-	$(CXX) $(CXXFLAGS) -c UserInput.cpp 
-
-Cache.o: Cache.h
-	$(CXX) $(CXXFLAGS) -c Cache.cpp
-
-MD5sum.o: MD5sum.h 
-	$(CXX) $(CXXFLAGS) -c MD5sum.cpp -lssl -lcrypto
-
-Serialize.o: Serialize.h 
-	$(CXX) $(CXXFLAGS) -c Serialize.cpp
-
-Debug.o: Debug.h
-	$(CXX) $(CXXFLAGS) -c Debug.cpp
+.PHONY: clean
 
 clean: 
-	rm -f $(OBJECTS) Main.o TestDriver.o UserInput.o cache test-cache
+	rm -f $(OBJ_TEST) $(OBJ_PRG) $(EXEC_PRG) $(EXEC_TEST)

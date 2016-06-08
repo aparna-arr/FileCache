@@ -1,11 +1,6 @@
 #include "Utils.h"
 using namespace std;
 
-void usage(void)
-{
-	cout << "usage: cache [-d <DEBUG_LEVEL 0..3>] -c <CACHE ROOT PATH> -i <WIGFILE>" << endl;
-}
-
 string conv(int num)
 {
 	stringstream ss;
@@ -19,3 +14,10 @@ string conv(double num)
 	ss << num;
 	return ss.str();
 }
+
+bool toInt(string str, int num)
+{
+	stringstream ss(str);
+	
+	return (ss >> num);
+}	

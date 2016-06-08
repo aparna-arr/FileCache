@@ -7,5 +7,4 @@
 int DebugLevel(int debug_init = 0); // this can only be initialized once
 
 void debug (std::string err, int debug_lvl);
-
 #endif
