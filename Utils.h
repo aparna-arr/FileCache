@@ -5,6 +5,7 @@
 #include<stdexcept>
 #include<unistd.h>
 #include<sstream>
+#include<vector>
 #include"Debug.h"
 
 #define RED "\033[31m"

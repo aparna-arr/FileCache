@@ -15,7 +15,7 @@ string conv(double num)
 	return ss.str();
 }
 
-bool toInt(string str, int num)
+bool toInt(string str, int & num)
 {
 	stringstream ss(str);
 	
