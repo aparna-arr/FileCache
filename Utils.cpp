@@ -1,6 +1,22 @@
 #include "Utils.h"
 using namespace std;
 
+string conv(int num) 
+{
+	stringstream str1;	
+	str1 << num;
+	return str1.str();
+}
+
+int toInt(string str1) 
+{
+	int num = -1;
+	stringstream ss(str1);
+
+	ss >> num;
+	return num;
+}
+
 void usage(void)
 {
 	cout << "usage: cache [-d <DEBUG_LEVEL 0..3>] -c <CACHE ROOT PATH> -i <WIGFILE>" << endl;

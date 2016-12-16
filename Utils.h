@@ -13,6 +13,8 @@
 #define BLUE "\033[34m"
 #define DEFAULT "\033[0m"
 
+std::string conv(int num);
+int toInt(std::string str1);
 void usage(void);
 void handle_opts(int argc, char * argv[], std::string &cache_root, std::string &filename, bool & remove, bool & remove_all);
 #endif
